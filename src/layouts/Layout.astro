@@ -1,0 +1,235 @@
+---
+import CookieBanner from '../components/CookieBanner.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  keywords?: string;
+  image?: string;
+}
+
+const { 
+  title, 
+  description = "EM STUDIOS - Especialistas en automatización de procesos empresariales. Desarrollamos software de automatización que optimiza tu negocio y aumenta la productividad.",
+  keywords = "automatización de procesos, software de automatización, optimización empresarial, desarrollo de software, automatización de tareas, soluciones empresariales",
+  image = "/EM STUDIOS sin fondo recortado.png"
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="keywords" content={keywords} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/EM STUDIOS sin fondo recortado.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/EM STUDIOS sin fondo recortado.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/EM STUDIOS sin fondo recortado.png" />
+    <link rel="shortcut icon" href="/EM STUDIOS sin fondo recortado.png" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, Astro.url)} />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={new URL(image, Astro.url)} />
+    
+    <!-- Preload fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "EM STUDIOS",
+        "url": "https://em-studios.netlify.app",
+        "description": "Especialistas en automatización de procesos empresariales y desarrollo de software de automatización",
+        "foundingDate": "2024",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "CO"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+57-322-802-6060",
+          "contactType": "ventas",
+          "availableLanguage": "Spanish"
+        },
+        "sameAs": [
+          "https://www.linkedin.com/company/em-studios"
+        ]
+      }
+    </script>
+    
+    <title>{title}</title>
+  </head>
+  <body class="font-sans antialiased">
+    <slot />
+    
+    <!-- Cookie Banner -->
+    <CookieBanner />
+    
+    <!-- Analytics placeholder -->
+    <!-- Google Analytics, Facebook Pixel, etc. -->
+    
+    <!-- Global smooth scrolling script -->
+    <script>
+      // Enhanced smooth scrolling for all anchor links with header offset
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('Enhanced smooth scrolling script loaded');
+        
+        // Function to handle smooth scroll
+        function smoothScrollTo(targetId) {
+          const target = document.querySelector(targetId);
+          console.log('Attempting to scroll to:', targetId, 'Target found:', !!target);
+          
+          if (target) {
+            // Calculate offset for fixed header (adjust based on your header height)
+            const headerOffset = 100;
+            const elementPosition = target.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            console.log('Scrolling to position:', offsetPosition);
+
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+            
+            return true;
+          } else {
+            console.error('Target not found for:', targetId);
+            return false;
+          }
+        }
+        
+        // Handle all anchor links
+        const anchors = document.querySelectorAll('a[href^="#"]');
+        console.log('Found anchor links:', anchors.length);
+        
+        anchors.forEach(anchor => {
+          anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            
+            // Ensure target ID is valid
+            if (targetId && targetId !== '#') {
+              smoothScrollTo(targetId);
+            }
+          });
+        });
+        
+        // Also handle clicks on elements with data-scroll-to attribute
+        const scrollTriggers = document.querySelectorAll('[data-scroll-to]');
+        scrollTriggers.forEach(trigger => {
+          trigger.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-scroll-to');
+            if (targetId) {
+              smoothScrollTo(targetId);
+            }
+          });
+        });
+        
+        // Debug: List all sections with IDs
+        const sections = document.querySelectorAll('section[id]');
+        console.log('Available sections:', Array.from(sections).map(s => s.id));
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  html {
+    /* Smooth scrolling handled by JavaScript */
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply text-gray-700 leading-relaxed;
+  }
+  
+  /* Ensure sections are properly positioned for scroll navigation */
+  section[id] {
+    scroll-margin-top: 100px;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-blue-500 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-blue-600;
+  }
+
+  /* Custom animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.8s ease-out;
+  }
+
+  .animate-bounce-subtle {
+    animation: bounceSubtle 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounceSubtle {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+</style> 

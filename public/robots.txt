@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://em-studios.vercel.app/sitemap-index.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /_admin/
+Disallow: /api/
+
+# Allow important pages
+Allow: /
+Allow: /aviso-legal
+Allow: /privacidad
+Allow: /terminos
+Allow: /cookies 

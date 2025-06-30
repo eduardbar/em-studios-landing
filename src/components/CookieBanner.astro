@@ -1,0 +1,82 @@
+---
+// Cookie banner component
+---
+
+<div id="cookie-banner" class="fixed bottom-0 left-0 right-0 z-50 bg-gray-900 border-t border-gray-700 p-4 shadow-lg hidden">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="text-center sm:text-left">
+        <p class="text-gray-300 text-sm">
+          🍪 Utilizamos cookies para mejorar tu experiencia de navegación y analizar el uso del sitio. 
+          <a href="/cookies" class="text-blue-400 hover:text-blue-300 underline">Más información</a>
+        </p>
+      </div>
+      <div class="flex gap-3 flex-shrink-0">
+        <button 
+          id="reject-cookies" 
+          class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors duration-200"
+        >
+          Rechazar
+        </button>
+        <button 
+          id="accept-cookies" 
+          class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+        >
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Cookie banner functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const banner = document.getElementById('cookie-banner');
+    const acceptBtn = document.getElementById('accept-cookies');
+    const rejectBtn = document.getElementById('reject-cookies');
+    
+    // Check if user has already made a choice
+    const cookieConsent = localStorage.getItem('cookie-consent');
+    
+    if (!cookieConsent) {
+      // Show banner after a short delay
+      setTimeout(() => {
+        banner?.classList.remove('hidden');
+      }, 1000);
+    }
+    
+    // Accept cookies
+    acceptBtn?.addEventListener('click', () => {
+      localStorage.setItem('cookie-consent', 'accepted');
+      banner?.classList.add('hidden');
+      
+      // Initialize analytics or other tracking here
+      if (typeof gtag !== 'undefined') {
+        gtag('consent', 'update', {
+          'analytics_storage': 'granted'
+        });
+      }
+    });
+    
+    // Reject cookies
+    rejectBtn?.addEventListener('click', () => {
+      localStorage.setItem('cookie-consent', 'rejected');
+      banner?.classList.add('hidden');
+      
+      // Disable analytics or other tracking here
+      if (typeof gtag !== 'undefined') {
+        gtag('consent', 'update', {
+          'analytics_storage': 'denied'
+        });
+      }
+    });
+  });
+</script>
+
+<style>
+  #cookie-banner {
+    backdrop-filter: blur(10px);
+    background-color: rgba(17, 24, 39, 0.95);
+  }
+</style> 
