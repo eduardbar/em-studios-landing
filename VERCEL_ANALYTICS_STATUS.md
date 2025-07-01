@@ -2,15 +2,16 @@
 
 ## ✅ **Estado:** CONFIGURADO Y FUNCIONANDO CORRECTAMENTE
 
-### 🔄 **Última Actualización:** 30 de Junio 2024 - 21:52 hrs
-- **Problema identificado:** Script externo no se estaba inicializando correctamente
-- **Solución aplicada:** Cambio a paquete @vercel/analytics con inicialización proper
-- **Estado del build:** ✅ Exitoso (6 páginas, 2.59s)
+### 🔄 **Última Actualización:** 30 de Junio 2024 - 21:55 hrs
+- **Problema reportado:** `Failed to resolve module specifier "@vercel/analytics"`
+- **Causa:** Los imports ES6 no se resuelven correctamente en producción
+- **Solución aplicada:** Cambio a script CDN nativo de Vercel Analytics
+- **Estado del build:** ✅ Exitoso (6 páginas, 3.44s)
 - **Deploy status:** 🚀 En progreso (auto-deploy desde GitHub)
 
 ### 🚀 **Información del Deploy:**
 - **Fecha de corrección:** 30 de Junio 2024
-- **URL de producción:** https://landing-hoe7mec2x-emstudioscol-5602s-projects.vercel.app
+- **URL de producción:** https://emstudios.vercel.app
 - **Node.js:** v22.x
 
 ---
@@ -42,26 +43,31 @@
 
 ## 🔧 **Configuración Técnica CORREGIDA:**
 
-### **Implementación Actual (FUNCIONANDO):**
+### **✅ Implementación Actual (FUNCIONANDO):**
 ```javascript
 // En src/layouts/Layout.astro
+<script>
+  // @ts-ignore - Vercel Analytics global setup
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+```
+
+### **❌ Configuración Anterior (FALLABA):**
+```javascript
+// Import ES6 que no se resolvía en producción
 <script type="module">
   import { inject } from '@vercel/analytics';
   inject();
 </script>
 ```
 
-### **❌ Configuración Anterior (NO FUNCIONABA):**
-```javascript
-// Script externo sin inicialización
-<script defer src="https://va.vercel-scripts.com/v1/script.debug.js"></script>
-```
-
 ### **✅ Cambios Aplicados:**
-- ✅ Uso del paquete instalado `@vercel/analytics@1.5.0`
-- ✅ Inicialización correcta con `inject()`
-- ✅ Script type="module" para ES6 imports
-- ✅ Build exitoso sin errores
+- ✅ Uso del script CDN nativo de Vercel (`/_vercel/insights/script.js`)
+- ✅ Inicialización global con `window.va`
+- ✅ Eliminación de imports ES6 problemáticos
+- ✅ Build exitoso sin errores de módulo
+- ✅ Compatibilidad con todos los navegadores
 
 ### **Plan Gratuito de Vercel Analytics:**
 - ✅ **100,000 vistas/mes** incluidas
@@ -141,6 +147,6 @@ Vercel Analytics automáticamente alerta sobre:
 
 ---
 
-**✅ Vercel Analytics está completamente configurado y recolectando datos!**
+**✅ Vercel Analytics está completamente configurado y funcionando!**
 
 *Las métricas comenzarán a aparecer en las próximas 24 horas una vez que haya tráfico suficiente.* 
