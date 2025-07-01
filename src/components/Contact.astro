@@ -284,9 +284,53 @@
   </div>
 </section>
 
-<script type="module">
-import emailjs from '@emailjs/browser';
-import { emailConfig, sendEmailFallback } from '../utils/emailConfig.js';
+<script>
+// EmailJS via CDN para compatibilidad inmediata
+const emailjsScript = document.createElement('script');
+emailjsScript.src = 'https://cdn.emailjs.com/dist/email.min.js';
+emailjsScript.onload = function() {
+  emailjs.init('ySw81bbirWizYr8eQ');
+};
+document.head.appendChild(emailjsScript);
+
+// Configuración EmailJS integrada
+const emailConfig = {
+  USER_ID: 'ySw81bbirWizYr8eQ',
+  SERVICE_ID: 'service_3s0igrc', 
+  TEMPLATE_ID: 'template_5cclczs',
+  TO_EMAIL: 'emstudios.col@gmail.com',
+  isConfigured: () => true
+};
+
+// Función de fallback
+const sendEmailFallback = (data) => {
+  const subject = encodeURIComponent(`Nueva consulta desde EM STUDIOS - ${data.empresa}`);
+  const body = encodeURIComponent(`
+Estimado equipo de EM STUDIOS,
+
+Nueva consulta desde la landing page:
+
+INFORMACIÓN DEL CLIENTE:
+------------------------
+Nombre: ${data.nombre}
+Email: ${data.email}
+Empresa: ${data.empresa}
+Teléfono: ${data.telefono || 'No proporcionado'}
+Empleados: ${data.empleados || 'No especificado'}
+
+MENSAJE:
+--------
+${data.mensaje || 'Sin mensaje adicional'}
+
+FECHA: ${new Date().toLocaleString('es-CO')}
+
+Por favor, contacta al cliente lo antes posible.
+  `.trim());
+  
+  const mailtoLink = `mailto:${emailConfig.TO_EMAIL}?subject=${subject}&body=${body}`;
+  window.open(mailtoLink, '_blank');
+  return true;
+};
 
 // Solo inicializar EmailJS si está configurado
 if (emailConfig.isConfigured()) {
