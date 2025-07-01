@@ -285,13 +285,19 @@
 </section>
 
 <script>
-// EmailJS via CDN para compatibilidad inmediata
-const emailjsScript = document.createElement('script');
-emailjsScript.src = 'https://cdn.emailjs.com/dist/email.min.js';
-emailjsScript.onload = function() {
-  emailjs.init('ySw81bbirWizYr8eQ');
-};
-document.head.appendChild(emailjsScript);
+// Declaraciones de tipos para EmailJS
+declare global {
+  interface Window {
+    emailjs: {
+      init: (userId: string) => void;
+      send: (serviceId: string, templateId: string, templateParams: any) => Promise<{ status: number }>;
+    };
+  }
+}
+
+// Estado de EmailJS
+let emailjsReady = false;
+let emailjsLoadPromise: Promise<typeof window.emailjs> | null = null;
 
 // Configuración EmailJS integrada
 const emailConfig = {
@@ -302,8 +308,64 @@ const emailConfig = {
   isConfigured: () => true
 };
 
+// Función para cargar EmailJS de forma segura
+function loadEmailJS(): Promise<typeof window.emailjs> {
+  if (emailjsLoadPromise) {
+    return emailjsLoadPromise;
+  }
+  
+  emailjsLoadPromise = new Promise((resolve, reject) => {
+    // Verificar si EmailJS ya está disponible
+    if (typeof window !== 'undefined' && (window as any).emailjs) {
+      emailjsReady = true;
+      resolve((window as any).emailjs);
+      return;
+    }
+    
+    // Cargar el script de EmailJS
+    const script = document.createElement('script');
+    script.src = 'https://cdn.emailjs.com/dist/email.min.js';
+    script.async = true;
+    
+    script.onload = () => {
+      // Verificar que emailjs esté realmente disponible
+      if (typeof window !== 'undefined' && (window as any).emailjs) {
+        try {
+          (window as any).emailjs.init(emailConfig.USER_ID);
+          emailjsReady = true;
+          console.log('✅ EmailJS cargado exitosamente');
+          resolve((window as any).emailjs);
+        } catch (error) {
+          console.error('❌ Error inicializando EmailJS:', error);
+          reject(error);
+        }
+      } else {
+        const error = new Error('EmailJS no está disponible después de cargar el script');
+        console.error('❌', error.message);
+        reject(error);
+      }
+    };
+    
+    script.onerror = (error) => {
+      console.error('❌ Error cargando EmailJS script:', error);
+      reject(error);
+    };
+    
+    // Timeout de seguridad
+    setTimeout(() => {
+      if (!emailjsReady) {
+        reject(new Error('Timeout cargando EmailJS'));
+      }
+    }, 10000);
+    
+    document.head.appendChild(script);
+  });
+  
+  return emailjsLoadPromise;
+}
+
 // Función de fallback
-const sendEmailFallback = (data) => {
+const sendEmailFallback = (data: any) => {
   const subject = encodeURIComponent(`Nueva consulta desde EM STUDIOS - ${data.empresa}`);
   const body = encodeURIComponent(`
 Estimado equipo de EM STUDIOS,
@@ -332,84 +394,94 @@ Por favor, contacta al cliente lo antes posible.
   return true;
 };
 
-// Solo inicializar EmailJS si está configurado
-if (emailConfig.isConfigured()) {
-  emailjs.init(emailConfig.USER_ID);
+// Elementos del DOM con tipos específicos
+const form = document.getElementById('contact-form') as HTMLFormElement | null;
+const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement | null;
+const btnText = document.getElementById('btn-text') as HTMLElement | null;
+const btnLoading = document.getElementById('btn-loading') as HTMLElement | null;
+const btnIcon = document.getElementById('btn-icon') as HTMLElement | null;
+const btnSpinner = document.getElementById('btn-spinner') as HTMLElement | null;
+const formMessages = document.getElementById('form-messages') as HTMLElement | null;
+const successMessage = document.getElementById('success-message') as HTMLElement | null;
+const errorMessage = document.getElementById('error-message') as HTMLElement | null;
+const errorText = document.getElementById('error-text') as HTMLElement | null;
+
+// Verificar que los elementos críticos existan
+if (!form || !submitBtn) {
+  console.error('❌ Elementos críticos del formulario no encontrados');
 }
 
-const form = document.getElementById('contact-form');
-const submitBtn = document.getElementById('submit-btn');
-const btnText = document.getElementById('btn-text');
-const btnLoading = document.getElementById('btn-loading');
-const btnIcon = document.getElementById('btn-icon');
-const btnSpinner = document.getElementById('btn-spinner');
-const formMessages = document.getElementById('form-messages');
-const successMessage = document.getElementById('success-message');
-const errorMessage = document.getElementById('error-message');
-const errorText = document.getElementById('error-text');
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  // Validar campos requeridos
-  const requiredFields = ['nombre', 'email', 'empresa'];
-  let isValid = true;
-  
-  requiredFields.forEach(fieldName => {
-    const field = document.getElementById(fieldName);
-    if (!field.value.trim()) {
-      field.classList.add('border-red-500');
+// Manejador del formulario
+if (form) {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Validar campos requeridos
+    const requiredFields = ['nombre', 'email', 'empresa'];
+    let isValid = true;
+    
+    requiredFields.forEach(fieldName => {
+      const field = document.getElementById(fieldName) as HTMLInputElement | null;
+      if (!field || !field.value.trim()) {
+        field?.classList.add('border-red-500');
+        isValid = false;
+      } else {
+        field.classList.remove('border-red-500');
+      }
+    });
+    
+    // Validar email
+    const emailField = document.getElementById('email') as HTMLInputElement | null;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailField && emailField.value && !emailRegex.test(emailField.value)) {
+      emailField.classList.add('border-red-500');
       isValid = false;
-    } else {
-      field.classList.remove('border-red-500');
     }
-  });
-  
-  // Validar email
-  const emailField = document.getElementById('email');
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (emailField.value && !emailRegex.test(emailField.value)) {
-    emailField.classList.add('border-red-500');
-    isValid = false;
-  }
-  
-  // Validar checkbox de privacidad
-  const privacyCheckbox = document.getElementById('privacy');
-  if (!privacyCheckbox.checked) {
-    isValid = false;
-    privacyCheckbox.parentElement.classList.add('text-red-400');
-  } else {
-    privacyCheckbox.parentElement.classList.remove('text-red-400');
-  }
-  
-  if (!isValid) {
-    showError('Por favor completa todos los campos requeridos correctamente.');
-    return;
-  }
-  
-  // Recopilar datos del formulario
-  const formData = {
-    nombre: document.getElementById('nombre').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    empresa: document.getElementById('empresa').value.trim(),
-    telefono: document.getElementById('telefono').value.trim(),
-    empleados: document.getElementById('empleados').value,
-    mensaje: document.getElementById('mensaje').value.trim()
-  };
-  
-  // Intentar envío según la configuración disponible
-  if (emailConfig.isConfigured()) {
+    
+    // Validar checkbox de privacidad
+    const privacyCheckbox = document.getElementById('privacy') as HTMLInputElement | null;
+    if (!privacyCheckbox || !privacyCheckbox.checked) {
+      isValid = false;
+      privacyCheckbox?.parentElement?.classList.add('text-red-400');
+    } else {
+      privacyCheckbox.parentElement?.classList.remove('text-red-400');
+    }
+    
+    if (!isValid) {
+      showError('Por favor completa todos los campos requeridos correctamente.');
+      return;
+    }
+    
+    // Recopilar datos del formulario
+    const nombreEl = document.getElementById('nombre') as HTMLInputElement | null;
+    const emailEl = document.getElementById('email') as HTMLInputElement | null;
+    const empresaEl = document.getElementById('empresa') as HTMLInputElement | null;
+    const telefonoEl = document.getElementById('telefono') as HTMLInputElement | null;
+    const empleadosEl = document.getElementById('empleados') as HTMLSelectElement | null;
+    const mensajeEl = document.getElementById('mensaje') as HTMLTextAreaElement | null;
+    
+    const formData = {
+      nombre: nombreEl?.value.trim() || '',
+      email: emailEl?.value.trim() || '',
+      empresa: empresaEl?.value.trim() || '',
+      telefono: telefonoEl?.value.trim() || '',
+      empleados: empleadosEl?.value || '',
+      mensaje: mensajeEl?.value.trim() || ''
+    };
+    
+    // Intentar envío con EmailJS, fallback a mailto si falla
     await sendWithEmailJS(formData);
-  } else {
-    sendWithMailto(formData);
-  }
-});
+  });
+}
 
-async function sendWithEmailJS(formData) {
+async function sendWithEmailJS(formData: any) {
   setLoadingState(true);
   hideMessages();
   
   try {
+    // Cargar EmailJS de forma segura
+    const emailjsLib = await loadEmailJS();
+    
     const templateParams = {
       from_name: formData.nombre,
       from_email: formData.email,
@@ -429,66 +501,78 @@ async function sendWithEmailJS(formData) {
       })
     };
     
-    const response = await emailjs.send(
+    console.log('📧 Enviando email con EmailJS...');
+    const response = await emailjsLib.send(
       emailConfig.SERVICE_ID,
       emailConfig.TEMPLATE_ID,
       templateParams
     );
     
     if (response.status === 200) {
+      console.log('✅ Email enviado exitosamente via EmailJS');
       showSuccess('¡Mensaje enviado exitosamente! Te contactaremos pronto.');
-      form.reset();
+      if (form && 'reset' in form) {
+        (form as HTMLFormElement).reset();
+      }
     } else {
-      throw new Error('Error en el envío');
+      throw new Error(`Error en respuesta: ${response.status}`);
     }
     
   } catch (error) {
-    console.error('EmailJS Error:', error);
+    console.error('❌ EmailJS Error:', error);
+    console.log('🔄 Utilizando método fallback...');
+    
     // Fallback a mailto
     showError('Enviando por método alternativo...');
-    setTimeout(() => sendWithMailto(formData), 1000);
+    setTimeout(() => {
+      try {
+        const success = sendEmailFallback(formData);
+        if (success) {
+          showSuccess('Se ha abierto tu cliente de email. Por favor envía el mensaje.');
+          if (form && 'reset' in form) {
+            (form as HTMLFormElement).reset();
+          }
+        }
+      } catch (fallbackError) {
+        console.error('❌ Fallback Error:', fallbackError);
+        showError('Por favor contáctanos directamente a emstudios.col@gmail.com o +57 322 802 6060');
+      }
+    }, 1000);
   } finally {
     setLoadingState(false);
   }
 }
 
-function sendWithMailto(formData) {
-  try {
-    const success = sendEmailFallback(formData);
-    if (success) {
-      showSuccess('Se ha abierto tu cliente de email. Por favor envía el mensaje.');
-      form.reset();
-    }
-  } catch (error) {
-    console.error('Mailto Error:', error);
-    showError('Por favor contáctanos directamente a emstudios.col@gmail.com o +57 322 802 6060');
+function setLoadingState(loading: boolean) {
+  if (submitBtn && 'disabled' in submitBtn) {
+    (submitBtn as HTMLButtonElement).disabled = loading;
   }
-}
-
-function setLoadingState(loading) {
-  submitBtn.disabled = loading;
   
   if (loading) {
-    btnText.classList.add('hidden');
-    btnIcon.classList.add('hidden');
-    btnLoading.classList.remove('hidden');
-    btnSpinner.classList.remove('hidden');
+    btnText?.classList.add('hidden');
+    btnIcon?.classList.add('hidden');
+    btnLoading?.classList.remove('hidden');
+    btnSpinner?.classList.remove('hidden');
   } else {
-    btnText.classList.remove('hidden');
-    btnIcon.classList.remove('hidden');
-    btnLoading.classList.add('hidden');
-    btnSpinner.classList.add('hidden');
+    btnText?.classList.remove('hidden');
+    btnIcon?.classList.remove('hidden');
+    btnLoading?.classList.add('hidden');
+    btnSpinner?.classList.add('hidden');
   }
 }
 
 function showSuccess(message = '¡Mensaje enviado exitosamente! Te contactaremos pronto.') {
+  if (!successMessage || !formMessages || !errorMessage) return;
+  
   const successText = successMessage.querySelector('div div');
-  successText.innerHTML = `
-    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-    </svg>
-    ${message}
-  `;
+  if (successText) {
+    successText.innerHTML = `
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      ${message}
+    `;
+  }
   
   formMessages.classList.remove('hidden');
   successMessage.classList.remove('hidden');
@@ -498,7 +582,9 @@ function showSuccess(message = '¡Mensaje enviado exitosamente! Te contactaremos
   formMessages.scrollIntoView({ behavior: 'smooth' });
 }
 
-function showError(message) {
+function showError(message: string) {
+  if (!errorText || !formMessages || !errorMessage || !successMessage) return;
+  
   errorText.textContent = message;
   formMessages.classList.remove('hidden');
   errorMessage.classList.remove('hidden');
@@ -509,19 +595,22 @@ function showError(message) {
 }
 
 function hideMessages() {
+  if (!formMessages || !successMessage || !errorMessage) return;
+  
   formMessages.classList.add('hidden');
   successMessage.classList.add('hidden');
   errorMessage.classList.add('hidden');
 }
 
-// Información para el desarrollador
-if (!emailConfig.isConfigured()) {
-  console.warn('⚠️ EmailJS no está configurado. El formulario usará mailto: como fallback.');
-  console.info('📧 Para configurar EmailJS:', {
-    '1': 'Regístrate en https://emailjs.com',
-    '2': 'Configura un servicio de email (Gmail recomendado)',
-    '3': 'Crea un template de email',
-    '4': 'Actualiza src/utils/emailConfig.js con tus credenciales'
+// Pre-cargar EmailJS al cargar la página para mejor rendimiento
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🔧 Inicializando sistema de formulario...');
+  
+  // Pre-cargar EmailJS sin bloquear la UI
+  loadEmailJS().then(() => {
+    console.log('✅ EmailJS pre-cargado exitosamente');
+  }).catch((error) => {
+    console.warn('⚠️ EmailJS no pudo pre-cargarse, se usará fallback:', error.message);
   });
-}
+});
 </script> 
