@@ -77,14 +77,27 @@
 
       <!-- Form Side -->
       <div class="bg-gray-900 rounded-2xl shadow-2xl p-8 lg:p-10 border border-gray-700">
-        <form class="space-y-6" name="contact" method="POST" data-netlify="true" action="/thank-you" netlify-honeypot="bot-field">
-          <!-- Formulario configurado con Netlify Forms para funcionamiento inmediato -->
-          
-          <!-- Honeypot field para spam -->
-          <p style="display: none;">
-            <label>Don't fill this out if you're human: <input name="bot-field" /></label>
-          </p>
-          
+        <!-- Status Messages -->
+        <div id="form-messages" class="mb-6 hidden">
+          <div id="success-message" class="bg-green-900 border border-green-500 text-green-100 px-4 py-3 rounded-lg hidden">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              ¡Mensaje enviado exitosamente! Te contactaremos pronto.
+            </div>
+          </div>
+          <div id="error-message" class="bg-red-900 border border-red-500 text-red-100 px-4 py-3 rounded-lg hidden">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              <span id="error-text">Hubo un error al enviar el mensaje. Intenta nuevamente.</span>
+            </div>
+          </div>
+        </div>
+
+        <form id="contact-form" class="space-y-6">
           <div>
             <label for="nombre" class="block text-sm font-medium text-gray-300 mb-2">
               Nombre Completo *
@@ -106,7 +119,7 @@
             <input 
               type="email" 
               id="email" 
-              name="_replyto" 
+              name="email" 
               required
               class="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 placeholder-gray-400"
               placeholder="tu@empresa.com"
@@ -159,23 +172,17 @@
           </div>
 
           <div>
-            <label for="procesos" class="block text-sm font-medium text-gray-300 mb-2">
+            <label for="mensaje" class="block text-sm font-medium text-gray-300 mb-2">
               ¿Qué procesos te gustaría automatizar?
             </label>
             <textarea 
-              id="procesos" 
+              id="mensaje" 
               name="mensaje" 
               rows="4"
               class="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 placeholder-gray-400"
               placeholder="Describe brevemente los procesos que consideras que podrían beneficiarse de la automatización..."
             ></textarea>
           </div>
-
-          <!-- Honeypot para spam -->
-          <input type="text" name="_gotcha" style="display:none" />
-          
-          <!-- Campo oculto para asunto -->
-          <input type="hidden" name="_subject" value="Nueva consulta desde EM STUDIOS - Automatización Empresarial" />
 
           <div class="flex items-start">
             <input 
@@ -193,11 +200,17 @@
 
           <button 
             type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center group"
+            id="submit-btn"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
-            <span>Solicitar Consultoría</span>
-            <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span id="btn-text">Solicitar Consultoría</span>
+            <span id="btn-loading" class="hidden">Enviando...</span>
+            <svg id="btn-icon" class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+            </svg>
+            <svg id="btn-spinner" class="hidden w-5 h-5 ml-2 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </button>
 
@@ -268,7 +281,195 @@
         </a>
       </div>
     </div>
-
-
   </div>
-</section> 
+</section>
+
+<script type="module">
+import emailjs from '@emailjs/browser';
+import { emailConfig, sendEmailFallback } from '../utils/emailConfig.js';
+
+// Solo inicializar EmailJS si está configurado
+if (emailConfig.isConfigured()) {
+  emailjs.init(emailConfig.USER_ID);
+}
+
+const form = document.getElementById('contact-form');
+const submitBtn = document.getElementById('submit-btn');
+const btnText = document.getElementById('btn-text');
+const btnLoading = document.getElementById('btn-loading');
+const btnIcon = document.getElementById('btn-icon');
+const btnSpinner = document.getElementById('btn-spinner');
+const formMessages = document.getElementById('form-messages');
+const successMessage = document.getElementById('success-message');
+const errorMessage = document.getElementById('error-message');
+const errorText = document.getElementById('error-text');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Validar campos requeridos
+  const requiredFields = ['nombre', 'email', 'empresa'];
+  let isValid = true;
+  
+  requiredFields.forEach(fieldName => {
+    const field = document.getElementById(fieldName);
+    if (!field.value.trim()) {
+      field.classList.add('border-red-500');
+      isValid = false;
+    } else {
+      field.classList.remove('border-red-500');
+    }
+  });
+  
+  // Validar email
+  const emailField = document.getElementById('email');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (emailField.value && !emailRegex.test(emailField.value)) {
+    emailField.classList.add('border-red-500');
+    isValid = false;
+  }
+  
+  // Validar checkbox de privacidad
+  const privacyCheckbox = document.getElementById('privacy');
+  if (!privacyCheckbox.checked) {
+    isValid = false;
+    privacyCheckbox.parentElement.classList.add('text-red-400');
+  } else {
+    privacyCheckbox.parentElement.classList.remove('text-red-400');
+  }
+  
+  if (!isValid) {
+    showError('Por favor completa todos los campos requeridos correctamente.');
+    return;
+  }
+  
+  // Recopilar datos del formulario
+  const formData = {
+    nombre: document.getElementById('nombre').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    empresa: document.getElementById('empresa').value.trim(),
+    telefono: document.getElementById('telefono').value.trim(),
+    empleados: document.getElementById('empleados').value,
+    mensaje: document.getElementById('mensaje').value.trim()
+  };
+  
+  // Intentar envío según la configuración disponible
+  if (emailConfig.isConfigured()) {
+    await sendWithEmailJS(formData);
+  } else {
+    sendWithMailto(formData);
+  }
+});
+
+async function sendWithEmailJS(formData) {
+  setLoadingState(true);
+  hideMessages();
+  
+  try {
+    const templateParams = {
+      from_name: formData.nombre,
+      from_email: formData.email,
+      empresa: formData.empresa,
+      telefono: formData.telefono || 'No proporcionado',
+      empleados: formData.empleados || 'No especificado',
+      message: formData.mensaje || 'Sin mensaje adicional',
+      to_email: emailConfig.TO_EMAIL,
+      reply_to: formData.email
+    };
+    
+    const response = await emailjs.send(
+      emailConfig.SERVICE_ID,
+      emailConfig.TEMPLATE_ID,
+      templateParams
+    );
+    
+    if (response.status === 200) {
+      showSuccess('¡Mensaje enviado exitosamente! Te contactaremos pronto.');
+      form.reset();
+    } else {
+      throw new Error('Error en el envío');
+    }
+    
+  } catch (error) {
+    console.error('EmailJS Error:', error);
+    // Fallback a mailto
+    showError('Enviando por método alternativo...');
+    setTimeout(() => sendWithMailto(formData), 1000);
+  } finally {
+    setLoadingState(false);
+  }
+}
+
+function sendWithMailto(formData) {
+  try {
+    const success = sendEmailFallback(formData);
+    if (success) {
+      showSuccess('Se ha abierto tu cliente de email. Por favor envía el mensaje.');
+      form.reset();
+    }
+  } catch (error) {
+    console.error('Mailto Error:', error);
+    showError('Por favor contáctanos directamente a emstudios.col@gmail.com o +57 322 802 6060');
+  }
+}
+
+function setLoadingState(loading) {
+  submitBtn.disabled = loading;
+  
+  if (loading) {
+    btnText.classList.add('hidden');
+    btnIcon.classList.add('hidden');
+    btnLoading.classList.remove('hidden');
+    btnSpinner.classList.remove('hidden');
+  } else {
+    btnText.classList.remove('hidden');
+    btnIcon.classList.remove('hidden');
+    btnLoading.classList.add('hidden');
+    btnSpinner.classList.add('hidden');
+  }
+}
+
+function showSuccess(message = '¡Mensaje enviado exitosamente! Te contactaremos pronto.') {
+  const successText = successMessage.querySelector('div div');
+  successText.innerHTML = `
+    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    ${message}
+  `;
+  
+  formMessages.classList.remove('hidden');
+  successMessage.classList.remove('hidden');
+  errorMessage.classList.add('hidden');
+  
+  // Scroll al mensaje
+  formMessages.scrollIntoView({ behavior: 'smooth' });
+}
+
+function showError(message) {
+  errorText.textContent = message;
+  formMessages.classList.remove('hidden');
+  errorMessage.classList.remove('hidden');
+  successMessage.classList.add('hidden');
+  
+  // Scroll al mensaje
+  formMessages.scrollIntoView({ behavior: 'smooth' });
+}
+
+function hideMessages() {
+  formMessages.classList.add('hidden');
+  successMessage.classList.add('hidden');
+  errorMessage.classList.add('hidden');
+}
+
+// Información para el desarrollador
+if (!emailConfig.isConfigured()) {
+  console.warn('⚠️ EmailJS no está configurado. El formulario usará mailto: como fallback.');
+  console.info('📧 Para configurar EmailJS:', {
+    '1': 'Regístrate en https://emailjs.com',
+    '2': 'Configura un servicio de email (Gmail recomendado)',
+    '3': 'Crea un template de email',
+    '4': 'Actualiza src/utils/emailConfig.js con tus credenciales'
+  });
+}
+</script> 
