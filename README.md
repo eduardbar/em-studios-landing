@@ -1,6 +1,23 @@
 # 🚀 EM STUDIOS - Landing Page de Automatización Empresarial
 
-Una landing page moderna y elegante para EM STUDIOS, empresa especializada en automatización empresarial y desarrollo de software de automatización de procesos.
+Landing page profesional para EM STUDIOS, empresa especializada en automatización empresarial.
+
+## 🚀 **URLs de Producción**
+
+- **Sitio Web:** https://landing-tau-ashy-31.vercel.app
+- **Repositorio:** https://github.com/eduardbar/em-studios-landing
+
+## ⚡ **Características**
+
+- ✅ Responsive design (móvil/desktop)
+- ✅ Tema oscuro profesional
+- ✅ Navegación suave entre secciones
+- ✅ Formulario de contacto funcional
+- ✅ FAQ interactivo con acordeón
+- ✅ Cookie banner completo
+- ✅ Páginas legales incluidas
+- ✅ SEO optimizado
+- ✅ Deploy automático desde GitHub
 
 ## 🎯 Características Principales
 
@@ -175,21 +192,17 @@ La landing page incluye información de contacto placeholder que debe ser actual
 
 ## 🔧 Configuración de Producción
 
+### Deploy Actual
+- **Plataforma**: Vercel
+- **URL**: https://landing-tau-ashy-31.vercel.app
+- **Repository**: https://github.com/eduardbar/em-studios-landing
+- **Deploy automático**: ✅ Configurado desde rama `main`
+
 ### Variables de Entorno
-Crear archivo `.env` para configuraciones específicas:
-
 ```env
-SITE_URL=https://em-studios.com
-CONTACT_EMAIL=info@em-studios.com
-ANALYTICS_ID=UA-XXXXXXXXX-X
+SITE_URL=https://landing-tau-ashy-31.vercel.app
+CONTACT_EMAIL=emstudios.col@gmail.com
 ```
-
-### Deploy
-Compatible con:
-- **Vercel**: Deploy automático desde Git
-- **Netlify**: Build command: `npm run build`, Publish directory: `dist/`
-- **GitHub Pages**: Con Actions para build automático
-- **Servidor VPS**: Build local y subida de carpeta `dist/`
 
 ## 📈 Métricas y Analytics
 
@@ -217,4 +230,6 @@ Este proyecto está bajo licencia MIT. Ver `LICENSE` para más detalles.
 
 **EM STUDIOS** - Automatización Empresarial que Multiplica tu Productividad 🚀
 
-*Creado con ❤️ usando Astro + Tailwind CSS* 
+*Creado con ❤️ usando Astro + Tailwind CSS*
+
+© 2024 EM STUDIOS. Todos los derechos reservados. 
