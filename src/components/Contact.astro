@@ -285,11 +285,11 @@
 </section>
 
 <script>
-// Declaraciones de tipos para EmailJS
+// Declaraciones de tipos para EmailJS v4
 declare global {
   interface Window {
     emailjs: {
-      init: (userId: string) => void;
+      init: (config: { publicKey: string }) => void;
       send: (serviceId: string, templateId: string, templateParams: any) => Promise<{ status: number }>;
     };
   }
@@ -322,21 +322,24 @@ function loadEmailJS(): Promise<typeof window.emailjs> {
       return;
     }
     
-    // Cargar el script de EmailJS
+    // Cargar el script de EmailJS versión 4
     const script = document.createElement('script');
-    script.src = 'https://cdn.emailjs.com/dist/email.min.js';
+    script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
     script.async = true;
     
     script.onload = () => {
       // Verificar que emailjs esté realmente disponible
       if (typeof window !== 'undefined' && (window as any).emailjs) {
         try {
-          (window as any).emailjs.init(emailConfig.USER_ID);
+          // EmailJS v4 usa un objeto en lugar de string
+          (window as any).emailjs.init({
+            publicKey: emailConfig.USER_ID
+          });
           emailjsReady = true;
-          console.log('✅ EmailJS cargado exitosamente');
+          console.log('✅ EmailJS v4 cargado exitosamente');
           resolve((window as any).emailjs);
         } catch (error) {
-          console.error('❌ Error inicializando EmailJS:', error);
+          console.error('❌ Error inicializando EmailJS v4:', error);
           reject(error);
         }
       } else {
@@ -347,14 +350,14 @@ function loadEmailJS(): Promise<typeof window.emailjs> {
     };
     
     script.onerror = (error) => {
-      console.error('❌ Error cargando EmailJS script:', error);
+      console.error('❌ Error cargando EmailJS v4 script:', error);
       reject(error);
     };
     
     // Timeout de seguridad
     setTimeout(() => {
       if (!emailjsReady) {
-        reject(new Error('Timeout cargando EmailJS'));
+        reject(new Error('Timeout cargando EmailJS v4'));
       }
     }, 10000);
     
@@ -501,7 +504,7 @@ async function sendWithEmailJS(formData: any) {
       })
     };
     
-    console.log('📧 Enviando email con EmailJS...');
+    console.log('📧 Enviando email con EmailJS v4...');
     const response = await emailjsLib.send(
       emailConfig.SERVICE_ID,
       emailConfig.TEMPLATE_ID,
@@ -509,7 +512,7 @@ async function sendWithEmailJS(formData: any) {
     );
     
     if (response.status === 200) {
-      console.log('✅ Email enviado exitosamente via EmailJS');
+      console.log('✅ Email enviado exitosamente via EmailJS v4');
       showSuccess('¡Mensaje enviado exitosamente! Te contactaremos pronto.');
       if (form && 'reset' in form) {
         (form as HTMLFormElement).reset();
@@ -519,7 +522,7 @@ async function sendWithEmailJS(formData: any) {
     }
     
   } catch (error) {
-    console.error('❌ EmailJS Error:', error);
+    console.error('❌ EmailJS v4 Error:', error);
     console.log('🔄 Utilizando método fallback...');
     
     // Fallback a mailto
@@ -602,15 +605,15 @@ function hideMessages() {
   errorMessage.classList.add('hidden');
 }
 
-// Pre-cargar EmailJS al cargar la página para mejor rendimiento
+// Pre-cargar EmailJS v4 al cargar la página para mejor rendimiento
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🔧 Inicializando sistema de formulario...');
+  console.log('🔧 Inicializando sistema de formulario con EmailJS v4...');
   
-  // Pre-cargar EmailJS sin bloquear la UI
+  // Pre-cargar EmailJS v4 sin bloquear la UI
   loadEmailJS().then(() => {
-    console.log('✅ EmailJS pre-cargado exitosamente');
+    console.log('✅ EmailJS v4 pre-cargado exitosamente');
   }).catch((error) => {
-    console.warn('⚠️ EmailJS no pudo pre-cargarse, se usará fallback:', error.message);
+    console.warn('⚠️ EmailJS v4 no pudo pre-cargarse, se usará fallback:', error.message);
   });
 });
 </script> 
