@@ -88,7 +88,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <CookieBanner />
     
     <!-- Vercel Analytics -->
-    <script defer src="https://va.vercel-scripts.com/v1/script.debug.js"></script>
+    <script type="module">
+      import { inject } from '@vercel/analytics';
+      inject();
+    </script>
     
     <!-- Global smooth scrolling script -->
     <script>
