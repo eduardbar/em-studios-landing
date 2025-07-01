@@ -1,9 +1,9 @@
 // Configuración de EmailJS para EM STUDIOS
 export const emailConfig = {
-  // Credenciales de EmailJS - Reemplaza con tus datos reales
-  USER_ID: 'YOUR_USER_ID',      // Tu User ID de EmailJS
-  SERVICE_ID: 'YOUR_SERVICE_ID', // Tu Service ID (Gmail, Outlook, etc.)
-  TEMPLATE_ID: 'YOUR_TEMPLATE_ID', // Tu Template ID
+  // Credenciales de EmailJS - CONFIGURADO ✅
+  USER_ID: 'ySw81bbirWizYr8eQ',      // Tu User ID de EmailJS
+  SERVICE_ID: 'service_3s0igrc', // Tu Service ID (Gmail)
+  TEMPLATE_ID: 'template_5cclczs', // Tu Template ID
   
   // Email de destino
   TO_EMAIL: 'emstudios.col@gmail.com',

@@ -374,7 +374,15 @@ async function sendWithEmailJS(formData) {
       empleados: formData.empleados || 'No especificado',
       message: formData.mensaje || 'Sin mensaje adicional',
       to_email: emailConfig.TO_EMAIL,
-      reply_to: formData.email
+      reply_to: formData.email,
+      fecha: new Date().toLocaleString('es-CO', { 
+        timeZone: 'America/Bogota',
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     };
     
     const response = await emailjs.send(
